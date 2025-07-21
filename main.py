@@ -13,8 +13,9 @@ from executor import CommandExecutor
 
 
 def main():
+    # Get the directory where this script is located
     script_dir = Path(__file__).parent.absolute()
-    default_model_path = script_dir / "models" / "phi-1_5-Q4_K_M.gguf"
+    default_model_path = script_dir / "models" / "qwen2.5-coder-3b-instruct-q4_k_m.gguf"
     
     parser = argparse.ArgumentParser(
         description="Convert natural language to Git commands using local LLM",
@@ -64,8 +65,8 @@ def main():
     # Validate model file exists
     if not os.path.exists(args.model_path):
         print(f"Error: Model file not found at {args.model_path}")
-        print("Please run the installation script or download the model manually:")
-        print("cd models && wget https://huggingface.co/TKDKid1000/phi-1_5-GGUF/resolve/main/phi-1_5-Q4_K_M.gguf")
+        print("Please download the Qwen2.5-Coder model:")
+        print("wget https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/qwen2.5-coder-3b-instruct-q4_k_m.gguf")
         sys.exit(1)
     
     # Initialize components
@@ -102,16 +103,21 @@ def process_query(query, llm_runner, prompt_parser, executor, context_data=None)
         # Generate prompt with context
         prompt = prompt_parser.generate_prompt(query, context_data)
         
-        # Get LLM response
+        # Get response from LLM
         print("Thinking...")
-        response = llm_runner.generate(prompt)
+        raw_response = llm_runner.generate(prompt)
         
-        # Parse commands from response
-        commands = prompt_parser.extract_commands(response)
+        # Parse commands
+        commands = prompt_parser.parse_commands(raw_response)
         
         if not commands:
-            print("Error: No valid Git commands found in the response")
+            print("Could not generate valid commands for the query.")
             return
+        
+        # Display generated commands
+        print("Generated commands:")
+        for i, cmd in enumerate(commands, 1):
+            print(f"  {i}. {cmd}")
         
         # Execute commands
         executor.execute_commands(commands)
@@ -121,8 +127,8 @@ def process_query(query, llm_runner, prompt_parser, executor, context_data=None)
 
 
 def run_interactive_shell(llm_runner, prompt_parser, executor, context_data=None):
-    """Run interactive REPL mode"""
-    print("Welcome to giti interactive shell!")
+    """Run in interactive shell mode"""
+    print("Giti Interactive Shell")
     print("Type 'exit' or 'quit' to leave, 'help' for assistance")
     print()
     
@@ -130,15 +136,20 @@ def run_interactive_shell(llm_runner, prompt_parser, executor, context_data=None
         try:
             query = input("giti> ").strip()
             
-            if query.lower() in ["exit", "quit"]:
+            if query.lower() in ['exit', 'quit']:
                 print("Goodbye!")
                 break
-            elif query.lower() == "help":
-                print_help()
+            elif query.lower() == 'help':
+                print("Enter natural language descriptions of Git operations.")
+                print("Examples:")
+                print("  'commit all changes with message fix bugs'")
+                print("  'create branch feature-auth'")
+                print("  'go back to commit from 2 hours ago'")
+                print()
                 continue
             elif not query:
                 continue
-            
+                
             process_query(query, llm_runner, prompt_parser, executor, context_data)
             print()
             
@@ -148,16 +159,6 @@ def run_interactive_shell(llm_runner, prompt_parser, executor, context_data=None
         except EOFError:
             print("\nGoodbye!")
             break
-
-
-def print_help():
-    """Print help for interactive mode"""
-    print("""
-Available commands:
-  - Any natural language Git query (e.g., "commit all changes")
-  - help: Show this help message
-  - exit/quit: Exit the shell
-    """)
 
 
 if __name__ == "__main__":

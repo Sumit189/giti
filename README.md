@@ -3,7 +3,7 @@
 </p>
 
 # giti - Natural Language Git Commands
-Convert natural language into executable Git commands using a local LLM.
+Convert natural language into executable Git commands using **Qwen2.5-Coder** - a powerful local LLM.
 
 ## Installation
 
@@ -19,7 +19,7 @@ source ~/.zshrc
 **Download the model:**
 ```bash
 cd models
-wget https://huggingface.co/TKDKid1000/phi-1_5-GGUF/resolve/main/phi-1_5-Q4_K_M.gguf
+wget https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/qwen2.5-coder-3b-instruct-q4_k_m.gguf
 ```
 
 ## Usage
@@ -42,7 +42,8 @@ giti --context examples/git_guide.txt "undo last commit"
 
 ## Features
 
-- **Local LLM**: No internet required after setup
+- **Qwen2.5-Coder**: Advanced code-focused model for accurate Git commands
+- **Local LLM**: No internet required after setup (1.96GB model)
 - **Dry run mode**: Preview commands before execution
 - **RAG support**: Use context files to improve responses
 - **Interactive shell**: Multi-command sessions
@@ -52,10 +53,13 @@ giti --context examples/git_guide.txt "undo last commit"
 
 | Input | Output |
 |-------|--------|
-| `giti "stage all files"` | `git add .` |
-| `giti "undo last commit"` | `git reset --soft HEAD~1` |
+| `giti "stage all files and commit"` | `git add .`<br>`git commit -m "..."` |
+| `giti "squash last 3 commits"` | `git rebase -i HEAD~3` |
 | `giti "create branch dev"` | `git checkout -b dev` |
-| `giti "push force"` | `git push --force-with-lease` |
+| `giti "force push safely"` | `git push --force-with-lease origin main` |
+| `giti "go back 6 hours"` | `git reset --hard HEAD@{6.hours.ago}` |
+| `giti "go back 5 commits"` | `git reset --hard HEAD~5` |
+| `giti "show commits from 3 hours ago"` | `git log --since="3 hours ago" --oneline` |
 
 ## Context Files
 
@@ -73,7 +77,7 @@ BOT: git rebase -i HEAD~<number>
 
 **Model not found error:**
 - Ensure you're in the giti directory when running installation
-- Check that `models/phi-1_5-Q4_K_M.gguf` exists
+- Check that `models/qwen2.5-coder-3b-instruct-q4_k_m.gguf` exists
 - Verify PATH includes the giti directory: `echo $PATH`
 
 **Permission denied:**
@@ -81,6 +85,14 @@ BOT: git rebase -i HEAD~<number>
 
 **Command not found:**
 - Restart your terminal or run: `source ~/.zshrc`
+
+## Model Details
+
+- **Model**: Qwen2.5-Coder-3B (Q4_K_M quantization)
+- **Size**: ~1.96GB
+- **Purpose**: Specifically designed for code generation
+- **Context**: 4K tokens
+- **Performance**: Fast inference with high accuracy
 
 ## Uninstall
 

@@ -11,7 +11,7 @@ class PromptParser:
     """Handles prompt generation and command parsing"""
     
     def __init__(self):
-        self.base_examples = self.base_examples = [
+        self.base_examples = [
             # Basic Workflow
             {"user": "check repository status", "bot": "git status"},
             {"user": "add all changes", "bot": "git add ."},
@@ -32,191 +32,172 @@ class PromptParser:
             {"user": "list all branches", "bot": "git branch"},
             {"user": "list remote branches", "bot": "git branch -r"},
             {"user": "rename current branch to hotfix", "bot": "git branch -m hotfix"},
-            {"user": "create branch and push to remote", "bot": "git checkout -b new-feature\ngit push -u origin new-feature"},
 
-            # Merging & Rebasing
+            # TIME-BASED OPERATIONS
+            {"user": "go back to commit that was done 6 hours back", "bot": "git reset --hard HEAD@{6.hours.ago}"},
+            {"user": "go back 6 hours", "bot": "git reset --hard HEAD@{6.hours.ago}"},
+            {"user": "reset to 3 hours ago", "bot": "git reset --hard HEAD@{3.hours.ago}"},
+            {"user": "checkout to 2 hours ago", "bot": "git checkout HEAD@{2.hours.ago}"},
+            {"user": "find commits from last 2 days", "bot": "git log --since=\"2 days ago\" --oneline"},
+            {"user": "reset to state from 3 hours ago", "bot": "git reset --hard HEAD@{3.hours.ago}"},
+            {"user": "show changes from yesterday", "bot": "git log --since=\"yesterday\" --oneline"},
+            {"user": "go back to commit made this morning", "bot": "git log --since=\"today 00:00\" --oneline"},
+            {"user": "reset to last week", "bot": "git reset --hard HEAD@{1.week.ago}"},
+            {"user": "go back to yesterday", "bot": "git reset --hard HEAD@{1.day.ago}"},
+            {"user": "show commits from 4 hours ago", "bot": "git log --since=\"4 hours ago\" --oneline"},
+            
+            # COMMIT COUNT OPERATIONS (different from time)
+            {"user": "go back 6 commits", "bot": "git reset --hard HEAD~6"},
+            {"user": "go back 3 commits", "bot": "git reset --hard HEAD~3"},
+            {"user": "checkout 5 commits back", "bot": "git checkout HEAD~5"},
+
+            # HISTORY NAVIGATION
+            {"user": "go back 5 commits", "bot": "git reset --hard HEAD~5"},
+            {"user": "go back 3 commits but keep changes", "bot": "git reset --soft HEAD~3"},
+            {"user": "undo last commit but keep changes", "bot": "git reset --soft HEAD~1"},
+            {"user": "undo last commit and discard changes", "bot": "git reset --hard HEAD~1"},
+            {"user": "undo last 2 commits but keep files", "bot": "git reset --soft HEAD~2"},
+
+            # INTERACTIVE REBASE & SQUASHING
+            {"user": "squash last 3 commits into one", "bot": "git rebase -i HEAD~3"},
+            {"user": "interactive rebase last 5 commits", "bot": "git rebase -i HEAD~5"},
+            {"user": "edit last commit", "bot": "git rebase -i HEAD~1"},
+
+            # COMMITS WITH STAGING
+            {"user": "commit all changes with message fix bugs", "bot": "git add .\ngit commit -m \"fix bugs\""},
+            {"user": "stage and commit with message added feature", "bot": "git add .\ngit commit -m \"added feature\""},
+
+            # FORCE OPERATIONS (with safety)
+            {"user": "force push safely", "bot": "git push --force-with-lease"},
+            {"user": "force push to origin main", "bot": "git push --force-with-lease origin main"},
+
+            # MERGING & REBASING
             {"user": "merge dev into current branch", "bot": "git merge dev"},
             {"user": "rebase current branch onto main", "bot": "git rebase main"},
             {"user": "abort merge", "bot": "git merge --abort"},
             {"user": "abort rebase", "bot": "git rebase --abort"},
-            {"user": "continue rebase", "bot": "git rebase --continue"},
-            {"user": "resolve conflicts and mark as resolved", "bot": "git add .\ngit rebase --continue"},
 
-            # Reset & Revert
-            {"user": "undo last commit but keep changes", "bot": "git reset --soft HEAD~1"},
-            {"user": "undo last commit and discard changes", "bot": "git reset --hard HEAD~1"},
-            {"user": "reset file to last commit", "bot": "git checkout -- <file>"},
-            {"user": "revert last commit", "bot": "git revert HEAD"},
-            {"user": "revert specific commit abc123", "bot": "git revert abc123"},
+            # LOGS & HISTORY
+            {"user": "show commit history", "bot": "git log --oneline"},
+            {"user": "show last 10 commits", "bot": "git log -10 --oneline"},
+            {"user": "show commits by author", "bot": "git log --author=\"<author>\" --oneline"},
+            {"user": "search commits by message", "bot": "git log --grep=\"<search>\" --oneline"},
 
-            # Stash
+            # STASH
             {"user": "stash changes", "bot": "git stash"},
-            {"user": "apply last stash", "bot": "git stash apply"},
-            {"user": "pop and apply stash", "bot": "git stash pop"},
+            {"user": "apply last stash", "bot": "git stash pop"},
             {"user": "list all stashes", "bot": "git stash list"},
-            {"user": "drop last stash", "bot": "git stash drop"},
 
-            # Remote Repos
-            {"user": "add remote origin", "bot": "git remote add origin <url>"},
-            {"user": "view remotes", "bot": "git remote -v"},
-            {"user": "remove remote upstream", "bot": "git remote remove upstream"},
-            {"user": "set upstream for current branch", "bot": "git push --set-upstream origin <branch>"},
-
-            # Tags
-            {"user": "create tag v1.0", "bot": "git tag v1.0"},
-            {"user": "push tags", "bot": "git push --tags"},
-            {"user": "delete tag v1.0", "bot": "git tag -d v1.0"},
-            {"user": "show all tags", "bot": "git tag"},
-
-            # Logs & History
-            {"user": "show commit history", "bot": "git log"},
-            {"user": "show one line log", "bot": "git log --oneline"},
-            {"user": "show file history", "bot": "git log <file>"},
-            {"user": "show changes", "bot": "git diff"},
-            {"user": "show staged changes", "bot": "git diff --cached"},
-            {"user": "show commit details", "bot": "git show"},
-            {"user": "view log with graph", "bot": "git log --oneline --graph --all"},
-
-            # Blame & Inspect
-            {"user": "blame a file", "bot": "git blame <file>"},
-            {"user": "who modified this line", "bot": "git blame <file>"},
-            {"user": "view specific commit abc123", "bot": "git show abc123"},
-
-            # Init & Clone
-            {"user": "initialize git repo", "bot": "git init"},
-            {"user": "clone repo", "bot": "git clone <url>"},
-            {"user": "clone with specific branch", "bot": "git clone -b <branch> <url>"},
-
-            # Cherry Pick & Bisect
-            {"user": "cherry-pick commit abc123", "bot": "git cherry-pick abc123"},
-            {"user": "start bisect", "bot": "git bisect start"},
-            {"user": "mark current commit as bad", "bot": "git bisect bad"},
-            {"user": "mark current commit as good", "bot": "git bisect good"},
-            {"user": "reset bisect", "bot": "git bisect reset"},
-
-            # Configuration
-            {"user": "set username", "bot": "git config --global user.name \"Your Name\""},
-            {"user": "set email", "bot": "git config --global user.email \"you@example.com\""},
-            {"user": "view config", "bot": "git config --list"},
-            {"user": "create alias for checkout", "bot": "git config --global alias.co checkout"},
-
-            # Clean & Maintenance
-            {"user": "clean untracked files", "bot": "git clean -fd"},
-            {"user": "remove all untracked files and directories", "bot": "git clean -fdx"},
-            {"user": "prune deleted remote branches", "bot": "git remote prune origin"},
+            # REMOTE OPERATIONS
             {"user": "fetch latest changes", "bot": "git fetch"},
-            {"user": "fetch and prune", "bot": "git fetch -p"}
+            {"user": "sync with remote", "bot": "git fetch origin\ngit reset --hard origin/main"},
         ]
-    
+
     def load_context_file(self, file_path: str) -> List[Dict[str, str]]:
-        """
-        Load RAG context from a file
-        
-        Args:
-            file_path: Path to the context file
-            
-        Returns:
-            List of user/bot example pairs
-        """
+        """Load examples from a context file"""
         if not os.path.exists(file_path):
-            raise FileNotFoundError(f"Context file not found: {file_path}")
+            return []
         
         examples = []
-        
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
+            
+        # Parse USER: ... BOT: ... format
+        lines = content.split('\n')
+        current_user = None
+        current_bot = None
         
-        # Parse USER/BOT format
-        pattern = r'USER:\s*(.*?)\s*BOT:\s*(.*?)(?=USER:|$)'
-        matches = re.findall(pattern, content, re.DOTALL | re.IGNORECASE)
-        
-        for user_text, bot_text in matches:
-            examples.append({
-                "user": user_text.strip(),
-                "bot": bot_text.strip()
-            })
-        
-        print(f"📚 Loaded {len(examples)} examples from context file")
+        for line in lines:
+            line = line.strip()
+            if line.startswith('USER:'):
+                current_user = line[5:].strip()
+            elif line.startswith('BOT:'):
+                current_bot = line[4:].strip()
+                if current_user and current_bot:
+                    examples.append({"user": current_user, "bot": current_bot})
+                    current_user = None
+                    current_bot = None
+                    
         return examples
-    
-    def generate_prompt(self, query: str, context_examples: Optional[List[Dict[str, str]]] = None) -> str:
+
+    def generate_prompt(self, user_query: str, context_data: Optional[List[Dict]] = None) -> str:
         """
-        Generate a few-shot prompt for the LLM
+        Generate a clean prompt for the LLM optimized for Qwen2.5-Coder
         
         Args:
-            query: User's natural language query
-            context_examples: Additional examples from RAG context
+            user_query: User's natural language query
+            context_data: Optional additional examples from context file
             
         Returns:
-            Complete prompt for the LLM
+            Formatted prompt string
         """
         # Combine base examples with context examples
         all_examples = self.base_examples.copy()
-        if context_examples:
-            all_examples.extend(context_examples)
+        if context_data:
+            all_examples.extend(context_data)
         
-        # Building the prompt
-        prompt_parts = [
-            "You are a Git command assistant. Convert natural language to Git commands.",
-            "Respond only with the Git command(s), nothing else.",
-            "Use multiple commands on separate lines if needed.",
-            "",
-            "Examples:",
-            ""
+        # Critical examples that should always be included (at the end for higher weight)
+        critical_examples = [
+            # CRITICAL: Time vs Commit Distinction
+            {"user": "go back 6 commits", "bot": "git reset --hard HEAD~6"},
+            {"user": "go back 3 commits", "bot": "git reset --hard HEAD~3"},
+            {"user": "go back 6 hours", "bot": "git reset --hard HEAD@{6.hours.ago}"},
+            {"user": "go back 3 hours", "bot": "git reset --hard HEAD@{3.hours.ago}"},
+            {"user": "reset to 2 hours ago", "bot": "git reset --hard HEAD@{2.hours.ago}"},
+            {"user": "checkout to 4 hours ago", "bot": "git checkout HEAD@{4.hours.ago}"},
+            {"user": "go back to yesterday", "bot": "git reset --hard HEAD@{1.day.ago}"},
+            {"user": "show commits from 5 hours ago", "bot": "git log --since=\"5 hours ago\" --oneline"},
         ]
         
-        # Add examples
-        for example in all_examples[-10:]:  # Taking last 10 examples to fit context
-            prompt_parts.append(f"USER: {example['user']}")
-            prompt_parts.append(f"BOT: {example['bot']}")
+        # Use a clean, focused prompt with explicit instructions
+        prompt_parts = [
+            "You are a Git command expert. Convert natural language descriptions into valid Git commands.",
+            "",
+            "CRITICAL RULES:",
+            "- For TIME periods (hours, days): Use HEAD@{N.hours.ago} or --since syntax",
+            "- For COMMIT counts: Use HEAD~N syntax", 
+            "- 'go back 6 hours' = HEAD@{6.hours.ago} (TIME)",
+            "- 'go back 6 commits' = HEAD~6 (COMMITS)",
+            "",
+            "Examples:",
+        ]
+        
+        # Add regular examples first
+        for example in all_examples[-10:]:  # Use last 10 examples
+            prompt_parts.append(f"Human: {example['user']}")
+            prompt_parts.append(f"Assistant: {example['bot']}")
+            prompt_parts.append("")
+        
+        # Add critical examples at the end (highest weight)
+        for example in critical_examples:
+            prompt_parts.append(f"Human: {example['user']}")
+            prompt_parts.append(f"Assistant: {example['bot']}")
             prompt_parts.append("")
         
         # Add the current query
-        prompt_parts.append(f"USER: {query}")
-        prompt_parts.append("BOT:")
+        prompt_parts.append(f"Human: {user_query}")
+        prompt_parts.append("Assistant:")
         
         return "\n".join(prompt_parts)
-    
-    def extract_commands(self, response: str) -> List[str]:
+
+    def parse_commands(self, llm_output: str) -> List[str]:
         """
-        Extract Git commands from the LLM response
+        Parse LLM output into git commands (minimal processing for better model)
         
         Args:
-            response: Raw response from the LLM
+            llm_output: Raw output from the LLM
             
         Returns:
-            List of Git commands
+            List of git commands
         """
-        # Response cleaning
-        response = response.strip()
+        if not llm_output.strip():
+            return ["git status"]
         
-        # Split into lines
-        lines = [line.strip() for line in response.split('\n') if line.strip()]
-        
+        # Split by newlines and clean up
         commands = []
-        for line in lines:
-            # Skip lines that don't look like git commands
-            if self._is_git_command(line):
+        for line in llm_output.strip().split('\n'):
+            line = line.strip()
+            if line and line.startswith('git'):
                 commands.append(line)
         
-        return commands
-    
-    def _is_git_command(self, line: str) -> bool:
-        """
-        Check if a line is a valid Git command
-        
-        Args:
-            line: Line to check
-            
-        Returns:
-            True if it's a Git command
-        """
-        # Remove common prefixes
-        line = line.strip()
-        if line.startswith('$'):
-            line = line[1:].strip()
-        if line.startswith('> '):
-            line = line[2:].strip()
-        
-        # Check if it starts with git
-        return line.startswith('git ') 
+        return commands if commands else ["git status"] 
