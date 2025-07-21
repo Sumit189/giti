@@ -5,17 +5,44 @@ giti - Natural language to Git commands CLI tool
 import argparse
 import sys
 import os
+import atexit
 from pathlib import Path
 
 from llm_runner import LLMRunner
 from parser import PromptParser
 from executor import CommandExecutor
 
+# Global model cache for speed
+_model_cache = {}
+_parser_cache = None
+
+
+def get_llm_runner(model_path: str) -> LLMRunner:
+    """Get cached LLM runner or create new one"""
+    global _model_cache
+    
+    if model_path not in _model_cache:
+        _model_cache[model_path] = LLMRunner(model_path)
+        # Register cleanup on exit
+        atexit.register(lambda: _model_cache[model_path].cleanup() if model_path in _model_cache else None)
+    
+    return _model_cache[model_path]
+
+
+def get_prompt_parser() -> PromptParser:
+    """Get cached prompt parser or create new one"""
+    global _parser_cache
+    
+    if _parser_cache is None:
+        _parser_cache = PromptParser()
+    
+    return _parser_cache
+
 
 def main():
     # Get the directory where this script is located
     script_dir = Path(__file__).parent.absolute()
-    default_model_path = script_dir / "models" / "qwen2.5-coder-3b-instruct-q4_k_m.gguf"
+    default_model_path = script_dir / "models" / "Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf"
     
     parser = argparse.ArgumentParser(
         description="Convert natural language to Git commands using local LLM",
@@ -65,14 +92,14 @@ def main():
     # Validate model file exists
     if not os.path.exists(args.model_path):
         print(f"Error: Model file not found at {args.model_path}")
-        print("Please download the Qwen2.5-Coder model:")
-        print("wget https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/qwen2.5-coder-3b-instruct-q4_k_m.gguf")
+        print("Please download the Qwen2.5-Coder-1.5B model:")
+        print("wget https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf")
         sys.exit(1)
     
-    # Initialize components
+    # Initialize components (with caching for speed)
     try:
-        llm_runner = LLMRunner(args.model_path)
-        prompt_parser = PromptParser()
+        llm_runner = get_llm_runner(args.model_path)
+        prompt_parser = get_prompt_parser()
         executor = CommandExecutor(dry_run=args.dry_run, no_confirm=args.no_confirm)
     except Exception as e:
         print(f"Error initializing components: {e}")
@@ -114,12 +141,7 @@ def process_query(query, llm_runner, prompt_parser, executor, context_data=None)
             print("Could not generate valid commands for the query.")
             return
         
-        # Display generated commands
-        print("Generated commands:")
-        for i, cmd in enumerate(commands, 1):
-            print(f"  {i}. {cmd}")
-        
-        # Execute commands
+        # Execute commands (executor will display them)
         executor.execute_commands(commands)
         
     except Exception as e:
@@ -128,7 +150,7 @@ def process_query(query, llm_runner, prompt_parser, executor, context_data=None)
 
 def run_interactive_shell(llm_runner, prompt_parser, executor, context_data=None):
     """Run in interactive shell mode"""
-    print("Giti Interactive Shell")
+    print("Giti Interactive Shell (model cached for speed)")
     print("Type 'exit' or 'quit' to leave, 'help' for assistance")
     print()
     

@@ -19,7 +19,7 @@ source ~/.zshrc
 **Download the model:**
 ```bash
 cd models
-wget https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/qwen2.5-coder-3b-instruct-q4_k_m.gguf
+wget https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf
 ```
 
 ## Usage
@@ -88,11 +88,11 @@ BOT: git rebase -i HEAD~<number>
 
 ## Model Details
 
-- **Model**: Qwen2.5-Coder-3B (Q4_K_M quantization)
-- **Size**: ~1.96GB
+- **Model**: Qwen2.5-Coder-1.5B (Q4_K_M quantization)
+- **Size**: ~1GB
 - **Purpose**: Specifically designed for code generation
-- **Context**: 4K tokens
-- **Performance**: Fast inference with high accuracy
+- **Context**: 1K tokens (optimized for speed)
+- **Performance**: Fast inference with good accuracy
 
 ## Uninstall
 

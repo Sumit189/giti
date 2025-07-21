@@ -15,13 +15,13 @@ except ImportError:
 class LLMRunner:
     """Handles local LLM inference using llama.cpp"""
     
-    def __init__(self, model_path: str, max_tokens: int = 100, temperature: float = 0.1):
+    def __init__(self, model_path: str, max_tokens: int = 50, temperature: float = 0.1):
         """
-        Initialize the LLM runner for Qwen2.5-Coder
+        Initialize the LLM runner for Qwen2.5-Coder with speed optimizations
         
         Args:
             model_path: Path to the GGUF model file
-            max_tokens: Maximum tokens to generate  
+            max_tokens: Maximum tokens to generate (reduced for speed)
             temperature: Sampling temperature
         """
         if not os.path.exists(model_path):
@@ -34,17 +34,21 @@ class LLMRunner:
         print(f"Loading Qwen2.5-Coder model from {model_path}...")
         self.llm = Llama(
             model_path=model_path,
-            n_ctx=4096,  # Good context window for examples
+            n_ctx=1024,  # Smaller context for speed
             n_threads=None,  # Use all available CPU threads
             verbose=False,  # Suppress llama.cpp logs
             seed=42,  # For reproducible results
             chat_format="chatml",  # Use ChatML format for Qwen models
+            n_batch=256,  # Smaller batch for speed
+            use_mmap=True,  # Memory mapping for faster loading
+            use_mlock=False,  # Don't lock memory for faster startup
+            n_gpu_layers=0,  # CPU only for consistency
         )
-        print("Model loaded successfully!")
+        print("Model loaded!")
     
     def generate(self, prompt: str) -> str:
         """
-        Generate git commands using Qwen2.5-Coder
+        Generate git commands using Qwen2.5-Coder (optimized for speed)
         
         Args:
             prompt: Input prompt for the model
@@ -61,7 +65,8 @@ class LLMRunner:
                 ],
                 max_tokens=self.max_tokens,
                 temperature=self.temperature,
-                top_p=0.9,
+                top_p=0.8,  # Slightly higher for speed
+                top_k=20,   # Lower for faster sampling
                 stream=False
             )
             
@@ -75,7 +80,8 @@ class LLMRunner:
                     prompt,
                     max_tokens=self.max_tokens,
                     temperature=self.temperature,
-                    top_p=0.9,
+                    top_p=0.8,
+                    top_k=20,
                     stop=["Human:", "Assistant:", "\n\n"],
                     echo=False,
                     stream=False
