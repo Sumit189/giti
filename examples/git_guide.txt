@@ -1,0 +1,60 @@
+USER: How do I push a branch?
+BOT: git push origin HEAD
+
+USER: How to reset the last commit?
+BOT: git reset --soft HEAD~1
+
+USER: How do I create and switch to a new branch?
+BOT: git checkout -b new-branch-name
+
+USER: How to merge feature branch into main?
+BOT: git checkout main
+git merge feature-branch
+
+USER: How do I discard all local changes?
+BOT: git restore .
+
+USER: How to see commit history in one line?
+BOT: git log --oneline
+
+USER: How do I delete a local branch?
+BOT: git branch -d branch-name
+
+USER: How to force push changes?
+BOT: git push --force-with-lease
+
+USER: How do I see what files changed in last commit?
+BOT: git show --name-only
+
+USER: How to unstage a file?
+BOT: git restore --staged filename
+
+USER: How do I clone a repository?
+BOT: git clone repository-url
+
+USER: How to see differences between commits?
+BOT: git diff commit1 commit2
+
+USER: How do I revert a commit without losing history?
+BOT: git revert commit-hash
+
+USER: How to squash last 3 commits?
+BOT: git rebase -i HEAD~3
+
+USER: How do I see remote branches?
+BOT: git branch -r
+
+USER: How to fetch all remote branches?
+BOT: git fetch --all
+
+USER: How do I cherry pick a commit?
+BOT: git cherry-pick commit-hash
+
+USER: How to see who changed each line of a file?
+BOT: git blame filename
+
+USER: How do I create a tag?
+BOT: git tag -a v1.0 -m "Version 1.0"
+
+USER: How to push tags to remote?
+BOT: git push origin --tags 

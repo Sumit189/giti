@@ -1,0 +1,56 @@
+USER: How do I fix merge conflicts?
+BOT: git add .
+git commit
+
+USER: How to continue a rebase after resolving conflicts?
+BOT: git rebase --continue
+
+USER: How do I abort a merge?
+BOT: git merge --abort
+
+USER: How to create a worktree?
+BOT: git worktree add ../new-worktree branch-name
+
+USER: How do I clean untracked files?
+BOT: git clean -fd
+
+USER: How to see staged changes?
+BOT: git diff --cached
+
+USER: How do I rename current branch?
+BOT: git branch -m new-branch-name
+
+USER: How to set upstream for current branch?
+BOT: git push -u origin HEAD
+
+USER: How do I see commits not in main branch?
+BOT: git log main..HEAD
+
+USER: How to create empty commit?
+BOT: git commit --allow-empty -m "Empty commit"
+
+USER: How do I edit last commit message?
+BOT: git commit --amend
+
+USER: How to add files to last commit?
+BOT: git add .
+git commit --amend --no-edit
+
+USER: How do I create patch from commits?
+BOT: git format-patch -n HEAD~n
+
+USER: How to apply a patch?
+BOT: git apply patch-file.patch
+
+USER: How do I see configuration?
+BOT: git config --list
+
+USER: How to set global user name and email?
+BOT: git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+
+USER: How do I ignore file changes temporarily?
+BOT: git update-index --skip-worktree filename
+
+USER: How to resume tracking ignored file?
+BOT: git update-index --no-skip-worktree filename 
