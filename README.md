@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/giti.png" alt="giti logo" width="450"/>
+  <img src="./assets/giti.png" alt="giti logo" width="350"/>
 </p>
 
 # giti - Natural Language Git Commands
@@ -10,7 +10,7 @@ Convert natural language into executable Git commands using a local LLM.
 ### Quick Install
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Sumit189/giti
 cd giti
 ./install_manual.sh
 ```
