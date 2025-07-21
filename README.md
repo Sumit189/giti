@@ -7,44 +7,19 @@ Convert natural language into executable Git commands using a local LLM.
 
 ## Installation
 
-### Quick Install
-
 ```bash
 git clone https://github.com/Sumit189/giti
 cd giti
-./install_manual.sh
+pip3 install llama-cpp-python
+chmod +x main.py giti
+echo 'export PATH="$(pwd):$PATH"' >> ~/.zshrc
+source ~/.zshrc
 ```
 
-This will:
-- Install Python dependencies (llama-cpp-python)
-- Download the language model (~875MB)
-- Create a global `giti` command
-
-### Manual Install
-
+**Download the model:**
 ```bash
-# Install dependency
-pip3 install llama-cpp-python
-
-# Download model
 cd models
 wget https://huggingface.co/TKDKid1000/phi-1_5-GGUF/resolve/main/phi-1_5-Q4_K_M.gguf
-cd ..
-
-# Use directly
-python3 main.py "your command"
-```
-
-### Global Command (Optional)
-
-To use `giti` from anywhere:
-
-```bash
-echo '#!/bin/bash' > /tmp/giti
-echo "cd $(pwd)" >> /tmp/giti
-echo 'python3 main.py "$@"' >> /tmp/giti
-chmod +x /tmp/giti
-sudo mv /tmp/giti /usr/local/bin/giti
 ```
 
 ## Usage
@@ -52,49 +27,68 @@ sudo mv /tmp/giti /usr/local/bin/giti
 ```bash
 # Basic usage
 giti "commit all changes with message fix bugs"
-giti "create new branch feature-auth"
 giti "push to main branch"
+giti "create new branch feature-auth"
 
-# Options
-giti --dry-run "reset last commit"          # Preview only
-giti --shell                                # Interactive mode
-giti --context examples/git_guide.txt "cmd" # Use custom examples
-giti --no-confirm "show status"             # Skip confirmation
+# Dry run (preview commands)
+giti --dry-run "reset to last commit"
+
+# Interactive shell
+giti --shell
+
+# With context file
+giti --context examples/git_guide.txt "undo last commit"
 ```
+
+## Features
+
+- **Local LLM**: No internet required after setup
+- **Dry run mode**: Preview commands before execution
+- **RAG support**: Use context files to improve responses
+- **Interactive shell**: Multi-command sessions
+- **Safety**: Confirmation prompts before dangerous operations
 
 ## Examples
 
 | Input | Output |
 |-------|--------|
-| "commit all changes" | `git add .`<br>`git commit -m "changes"` |
-| "create branch fix-bug" | `git checkout -b fix-bug` |
-| "undo last commit" | `git reset --soft HEAD~1` |
-| "show status" | `git status` |
+| `giti "stage all files"` | `git add .` |
+| `giti "undo last commit"` | `git reset --soft HEAD~1` |
+| `giti "create branch dev"` | `git checkout -b dev` |
+| `giti "push force"` | `git push --force-with-lease` |
 
-## Custom Context
+## Context Files
 
-Create files in `USER: question` / `BOT: command` format:
+Create `.txt` files with Q&A format for better responses:
 
 ```txt
-USER: How do I stash changes?
-BOT: git stash
+USER: How to revert a merge?
+BOT: git revert -m 1 <commit-hash>
 
-USER: How do I apply stash?
-BOT: git stash pop
+USER: How to squash commits?
+BOT: git rebase -i HEAD~<number>
 ```
 
-Use with: `giti --context myfile.txt "stash my changes"`
+## Troubleshooting
+
+**Model not found error:**
+- Ensure you're in the giti directory when running installation
+- Check that `models/phi-1_5-Q4_K_M.gguf` exists
+- Verify PATH includes the giti directory: `echo $PATH`
+
+**Permission denied:**
+- Run: `chmod +x main.py giti`
+
+**Command not found:**
+- Restart your terminal or run: `source ~/.zshrc`
 
 ## Uninstall
 
 ```bash
-sudo rm /usr/local/bin/giti              # Remove command
-pip3 uninstall llama-cpp-python          # Remove dependency  
-rm models/phi-1_5-Q4_K_M.gguf           # Remove model
-```
+# Remove from PATH
+sed -i '' '/giti/d' ~/.zshrc
+source ~/.zshrc
 
-## Requirements
-
-- Python 3.8+
-- 1GB disk space
-- Internet connection (for initial model download) 
+# Remove files
+rm -rf /path/to/giti
+``` 

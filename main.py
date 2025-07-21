@@ -13,6 +13,9 @@ from executor import CommandExecutor
 
 
 def main():
+    script_dir = Path(__file__).parent.absolute()
+    default_model_path = script_dir / "models" / "phi-1_5-Q4_K_M.gguf"
+    
     parser = argparse.ArgumentParser(
         description="Convert natural language to Git commands using local LLM",
         prog="giti"
@@ -52,7 +55,7 @@ def main():
     parser.add_argument(
         "--model-path",
         type=str,
-        default="models/phi-1_5-Q4_K_M.gguf",
+        default=str(default_model_path),
         help="Path to the GGUF model file"
     )
     
