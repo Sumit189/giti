@@ -1,5 +1,8 @@
-# giti - Natural Language Git Commands
+<p align="center">
+  <img src="./assets/giti.png" alt="giti logo" width="450"/>
+</p>
 
+# giti - Natural Language Git Commands
 Convert natural language into executable Git commands using a local LLM.
 
 ## Installation
