@@ -5,6 +5,9 @@
 echo "Installing giti - Natural Language Git CLI"
 echo "========================================"
 
+# Get the absolute path of the current directory
+GITI_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Check if Python 3.8+ is installed
 if ! command -v python3 &> /dev/null; then
     echo "Error: Python 3 is required but not installed."
@@ -17,14 +20,14 @@ echo "Installing dependencies..."
 pip3 install llama-cpp-python
 
 # Make main.py executable
-chmod +x main.py
+chmod +x "$GITI_DIR/main.py"
 
-# Create symlink to make 'giti' command available globally
+# Create global command to make 'giti' available globally
 if [ ! -f "/usr/local/bin/giti" ]; then
     echo "Creating global 'giti' command..."
     echo "#!/bin/bash" > /tmp/giti
-    echo "cd $(pwd)" >> /tmp/giti
-    echo "python3 main.py \"\$@\"" >> /tmp/giti
+    echo "cd \"$GITI_DIR\"" >> /tmp/giti
+    echo "python3 \"$GITI_DIR/main.py\" \"\$@\"" >> /tmp/giti
     chmod +x /tmp/giti
     sudo mv /tmp/giti /usr/local/bin/giti
     echo "✓ 'giti' command installed to /usr/local/bin/giti"
@@ -33,10 +36,10 @@ else
 fi
 
 # Download model if not present
-model_file="models/phi-1_5-Q4_K_M.gguf"
+model_file="$GITI_DIR/models/phi-1_5-Q4_K_M.gguf"
 if [ ! -f "$model_file" ]; then
     echo "Downloading language model (~875MB)..."
-    cd models
+    cd "$GITI_DIR/models"
     if command -v wget &> /dev/null; then
         wget https://huggingface.co/TKDKid1000/phi-1_5-GGUF/resolve/main/phi-1_5-Q4_K_M.gguf
     elif command -v curl &> /dev/null; then
@@ -47,7 +50,7 @@ if [ ! -f "$model_file" ]; then
         echo "https://huggingface.co/TKDKid1000/phi-1_5-GGUF/resolve/main/phi-1_5-Q4_K_M.gguf"
         exit 1
     fi
-    cd ..
+    cd "$GITI_DIR"
     echo "✓ Model downloaded successfully!"
 else
     echo "✓ Model file already exists"
