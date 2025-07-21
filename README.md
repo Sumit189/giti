@@ -36,6 +36,9 @@ giti --dry-run "reset to last commit"
 # Interactive shell
 giti --shell
 
+# With context file for enhanced workflows
+giti --context examples/simple_workflow.txt "start new feature auth-system"
+
 # With context file
 giti --context examples/git_guide.txt "undo last commit"
 ```
@@ -61,17 +64,66 @@ giti --context examples/git_guide.txt "undo last commit"
 | `giti "go back 5 commits"` | `git reset --hard HEAD~5` |
 | `giti "show commits from 3 hours ago"` | `git log --since="3 hours ago" --oneline` |
 
-## Context Files
+## Context Files (RAG Support)
 
-Create `.txt` files with Q&A format for better responses:
+Context files allow you to provide additional knowledge to enhance Git command generation. They use a simple Q&A format to teach the model about your specific workflows.
 
+### Creating a Context File
+
+Create a `.txt` file with Q&A pairs in this format:
+
+**Example: `my_git_workflow.txt`**
 ```txt
-USER: How to revert a merge?
-BOT: git revert -m 1 <commit-hash>
+USER: How to start new feature?
+BOT: git checkout main && git pull && git checkout -b feature/<name>
 
-USER: How to squash commits?
-BOT: git rebase -i HEAD~<number>
+USER: How to commit all changes?
+BOT: git add . && git commit -m "message"
+
+USER: How to force push safely?
+BOT: git push --force-with-lease
+
+USER: How to squash last 3 commits?
+BOT: git rebase -i HEAD~3
+
+USER: How to undo last commit?
+BOT: git reset --soft HEAD~1
+
+USER: How to stash work?
+BOT: git stash push -m "work in progress"
 ```
+
+### Using Context Files
+
+**Single Command:**
+```bash
+# Use your context file
+giti --context my_git_workflow.txt "start new feature auth-system"
+# Output: git checkout main && git pull && git checkout -b feature/auth-system
+
+# Test first with dry-run
+giti --dry-run --context my_git_workflow.txt "force push safely"
+# Output: git push --force-with-lease
+```
+
+**Interactive Shell:**
+```bash
+# Load context for entire session
+giti --shell --context my_git_workflow.txt
+
+# Example session:
+giti> start new feature payment
+giti> commit all changes  
+giti> force push safely
+giti> exit
+```
+
+### Tips
+
+- Keep files short (8-10 examples work best)
+- Match your queries to the exact wording in your context file
+- Test with `--dry-run` first
+- Use simple, direct commands rather than complex workflows
 
 ## Troubleshooting
 
