@@ -43,7 +43,7 @@ giti --context examples/git_guide.txt "undo last commit"
 ## Features
 
 - **Qwen2.5-Coder**: Advanced code-focused model for accurate Git commands
-- **Local LLM**: No internet required after setup (1.96GB model)
+- **Local LLM**: No internet required after setup (~1.0GB model)
 - **Dry run mode**: Preview commands before execution
 - **RAG support**: Use context files to improve responses
 - **Interactive shell**: Multi-command sessions
