@@ -14,7 +14,7 @@ pip3 install llama-cpp-python && chmod +x main.py giti
 echo "export PATH=\"$(pwd):\$PATH\"" >> ~/.zshrc && source ~/.zshrc
 
 # Download model (1GB)
-mkdir -p models && cd models
+cd models
 wget https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf
 
 # Test (open new terminal first)
