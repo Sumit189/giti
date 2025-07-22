@@ -1,6 +1,11 @@
 #!/bin/bash
 # giti wrapper script
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Capture the user's current working directory
+
+# Capture the user's current working directory FIRST (before any other operations)
 export GITI_ORIGINAL_CWD="$(pwd)"
+
+# Now get the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Execute the main script
 python3 "$SCRIPT_DIR/main.py" "$@" 

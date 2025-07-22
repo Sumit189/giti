@@ -5,22 +5,68 @@
 # giti - Natural Language Git Commands
 Convert natural language into executable Git commands using **Qwen2.5-Coder** - a powerful local LLM.
 
+## Quick Start
+
+```bash
+# Install
+git clone https://github.com/Sumit189/giti && cd giti
+pip3 install llama-cpp-python && chmod +x main.py giti
+echo 'export PATH="$(pwd):$PATH"' >> ~/.zshrc && source ~/.zshrc
+
+# Download model (1GB)
+mkdir -p models && cd models
+wget https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf
+
+# Test (open new terminal first)
+giti "check status" --dry-run
+```
+
 ## Installation
 
+**Clone and setup:**
 ```bash
 git clone https://github.com/Sumit189/giti
 cd giti
 pip3 install llama-cpp-python
 chmod +x main.py giti
+```
+
+> **Important**: Run the PATH commands while in the giti directory since `$(pwd)` will capture the current working directory.
+> 
+> **Benefit**: This approach works regardless of where you clone giti (Desktop, Documents, Projects folder, etc.)
+
+**Add to PATH (choose your shell):**
+
+For **zsh** (most macOS users):
+```bash
 echo 'export PATH="$(pwd):$PATH"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
+For **bash**:
+```bash
+echo 'export PATH="$(pwd):$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+> **Alternative**: If you prefer, you can use the absolute path: `echo 'export PATH="/full/path/to/giti:$PATH"'`
+
 **Download the model:**
 ```bash
+mkdir -p models
 cd models
 wget https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf
+cd ..
 ```
+
+**Verify installation:**
+```bash
+# Test from any directory
+cd /tmp
+giti "check status" --dry-run
+```
+
+You should see the model load and a command like `git status` generated.
 
 ## Usage
 
@@ -127,16 +173,29 @@ giti> exit
 
 ## Troubleshooting
 
+**"Command not found: giti":**
+- Open a **new terminal** (important for PATH changes to take effect)
+- Verify PATH includes giti: `echo $PATH | grep giti`
+- If not found, re-run the PATH export command for your shell
+
 **Model not found error:**
-- Ensure you're in the giti directory when running installation
-- Check that `models/qwen2.5-coder-3b-instruct-q4_k_m.gguf` exists
-- Verify PATH includes the giti directory: `echo $PATH`
+- Ensure the model file exists: `ls -la models/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf`
+- If missing, re-download: 
+  ```bash
+  mkdir -p models && cd models
+  wget https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf
+  ```
 
 **Permission denied:**
 - Run: `chmod +x main.py giti`
 
-**Command not found:**
-- Restart your terminal or run: `source ~/.zshrc`
+**Commands executing in wrong directory:**
+- This should be fixed in the latest version
+- Verify with: `giti "check status" --dry-run` (should show your current directory)
+
+**Shell compatibility issues:**
+- Use zsh on macOS: `chsh -s /bin/zsh`
+- Or use bash: `chsh -s /bin/bash` and modify `~/.bashrc` instead of `~/.zshrc`
 
 ## Model Details
 
@@ -149,10 +208,15 @@ giti> exit
 ## Uninstall
 
 ```bash
-# Remove from PATH
-sed -i '' '/giti/d' ~/.zshrc
-source ~/.zshrc
+# Remove from PATH (for zsh)
+sed -i '' '/export PATH.*giti/d' ~/.zshrc && source ~/.zshrc
+
+# Remove from PATH (for bash)  
+sed -i '/export PATH.*giti/d' ~/.bashrc && source ~/.bashrc
 
 # Remove files
-rm -rf /path/to/giti
+# First, find where giti is installed:
+which giti
+# Then remove that directory (replace with actual path):
+# rm -rf /actual/path/to/giti
 ``` 
