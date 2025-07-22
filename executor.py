@@ -144,26 +144,25 @@ class CommandExecutor:
         
         retry_commands = []
         
-        # Strategy 1: Find similar branch names
-        similar_branches = self._find_similar_branches(target_branch, available_branches)
-        for similar_branch in similar_branches[:2]:  # Try top 2 matches
+        # Strategy 1: Exact case-insensitive matches
+        exact_matches = [b for b in available_branches if b.lower() == target_branch.lower() and b != target_branch]
+        for exact_match in exact_matches[:1]:  # Only try the first exact match
             if "checkout" in cmd_lower:
-                retry_commands.append(f"git checkout {similar_branch}")
+                retry_commands.append(f"git checkout {exact_match}")
             elif "switch" in cmd_lower:
-                retry_commands.append(f"git switch {similar_branch}")
+                retry_commands.append(f"git switch {exact_match}")
         
-        # Strategy 2: Common fallbacks for main/master
-        if target_branch == "main" and "master" in available_branches:
-            retry_commands.insert(0, original_cmd.replace("main", "master"))
-        elif target_branch == "master" and "main" in available_branches:
-            retry_commands.insert(0, original_cmd.replace("master", "main"))
+        # Strategy 2: Create the exact branch the user asked for
+        if "checkout" in cmd_lower:
+            retry_commands.append(f"git checkout -b {target_branch}")
+        elif "switch" in cmd_lower:
+            retry_commands.append(f"git switch -c {target_branch}")
             
-        # Strategy 3: Create the branch if no matches found
-        if not retry_commands:
-            if "checkout" in cmd_lower:
-                retry_commands.append(f"git checkout -b {target_branch}")
-            elif "switch" in cmd_lower:
-                retry_commands.append(f"git switch -c {target_branch}")
+        # Strategy 3: Fuzzy matches as suggestions only (don't auto-execute)
+        similar_branches = self._find_similar_branches(target_branch, available_branches)
+        if similar_branches:
+            print(f"💡 Also found similar branches: {', '.join(similar_branches[:2])}")
+            # Don't auto-add fuzzy matches - they should be manual suggestions
         
         # Try each alternative
         for retry_cmd in retry_commands:
@@ -188,6 +187,12 @@ class CommandExecutor:
                     
             except Exception as e:
                 print(f"❌ Alternative failed with exception: {e}")
+        
+        # If all retries failed, suggest fuzzy matches
+        if similar_branches:
+            print(f"\n💡 Did you mean one of these existing branches?")
+            for branch in similar_branches[:3]:
+                print(f"   giti 'switch to {branch}'")
         
         return False
     
