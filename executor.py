@@ -69,15 +69,40 @@ class CommandExecutor:
                     print(f"❌ Error (exit code {result.returncode})")
                     if result.stderr.strip():
                         print(f"📥 Error output:\n{result.stderr}")
-                    
-                    # Ask if user wants to continue with remaining commands
-                    if i < len(commands) and not self.no_confirm:
-                        if not self._get_continue_confirmation():
-                            print("🛑 Execution stopped")
-                            break
-                            
+                        
+                        # try alternatives
+                        error_msg = result.stderr.lower()
+                        retry_attempted = False
+                        
+                        if "pathspec" in error_msg and "did not match" in error_msg:
+                            retry_attempted = self._try_branch_alternatives(cmd, i, len(commands))
+                        
+                        if not retry_attempted:
+                            # Show suggestions if no auto-retry was possible
+                            if "pathspec" in error_msg and "did not match" in error_msg:
+                                print("\n💡 Suggestion: The reference doesn't exist (branch, file, or commit).")
+                                print("Try these commands to check what's available:")
+                                print("  git branch -a    # See all branches")
+                                print("  git log --oneline # See recent commits")
+                                print("  git status       # See current state")
+                            elif "did not match any file" in error_msg:
+                                print("\n💡 Suggestion: The reference doesn't exist.")
+                                print("Check available options with: git branch -a")
+                        
+                        # Ask if user wants to continue with remaining commands (if no successful retry)
+                        if not retry_attempted and i < len(commands) and not self.no_confirm:
+                            if not self._get_continue_confirmation():
+                                print("🛑 Execution stopped")
+                                break
+                    else:
+                        # No stderr but still failed
+                        if i < len(commands) and not self.no_confirm:
+                            if not self._get_continue_confirmation():
+                                print("🛑 Execution stopped")
+                                break
+                        
             except subprocess.TimeoutExpired:
-                print("⏰ Command timed out after 30 seconds")
+                print("Command timed out after 30 seconds")
                 if i < len(commands) and not self.no_confirm:
                     if not self._get_continue_confirmation():
                         print("🛑 Execution stopped")
@@ -91,6 +116,143 @@ class CommandExecutor:
                         break
         
         print("\n✨ Command execution completed")
+    
+    def _try_branch_alternatives(self, original_cmd: str, cmd_index: int, total_commands: int) -> bool:
+        """
+        Try alternative commands when branch operations fail
+        Returns True if a successful retry was made, False otherwise
+        """
+        cmd_lower = original_cmd.lower()
+        
+        if not ("checkout" in cmd_lower or "switch" in cmd_lower):
+            return False
+            
+        # Extract branch name from checkout/switch commands
+        parts = original_cmd.split()
+        if len(parts) < 2:
+            return False
+            
+        target_branch = parts[-1]  # Last argument is usually the branch
+        
+        # Get all available branches
+        available_branches = self._get_available_branches()
+        if not available_branches:
+            return False
+            
+        print(f"\n🔍 Looking for alternatives to '{target_branch}'...")
+        print(f"📋 Available branches: {', '.join(available_branches[:5])}{'...' if len(available_branches) > 5 else ''}")
+        
+        retry_commands = []
+        
+        # Strategy 1: Find similar branch names
+        similar_branches = self._find_similar_branches(target_branch, available_branches)
+        for similar_branch in similar_branches[:2]:  # Try top 2 matches
+            if "checkout" in cmd_lower:
+                retry_commands.append(f"git checkout {similar_branch}")
+            elif "switch" in cmd_lower:
+                retry_commands.append(f"git switch {similar_branch}")
+        
+        # Strategy 2: Common fallbacks for main/master
+        if target_branch == "main" and "master" in available_branches:
+            retry_commands.insert(0, original_cmd.replace("main", "master"))
+        elif target_branch == "master" and "main" in available_branches:
+            retry_commands.insert(0, original_cmd.replace("master", "main"))
+            
+        # Strategy 3: Create the branch if no matches found
+        if not retry_commands:
+            if "checkout" in cmd_lower:
+                retry_commands.append(f"git checkout -b {target_branch}")
+            elif "switch" in cmd_lower:
+                retry_commands.append(f"git switch -c {target_branch}")
+        
+        # Try each alternative
+        for retry_cmd in retry_commands:
+            print(f"\n🔄 Trying alternative: {retry_cmd}")
+            
+            try:
+                retry_result = subprocess.run(
+                    retry_cmd.split(),
+                    capture_output=True,
+                    text=True,
+                    cwd=".",
+                    timeout=30
+                )
+                
+                if retry_result.returncode == 0:
+                    print("✅ Alternative succeeded!")
+                    if retry_result.stdout.strip():
+                        print(f"📤 Output:\n{retry_result.stdout}")
+                    return True
+                else:
+                    print(f"❌ Alternative failed: {retry_result.stderr.strip()}")
+                    
+            except Exception as e:
+                print(f"❌ Alternative failed with exception: {e}")
+        
+        return False
+    
+    def _get_available_branches(self) -> list:
+        """Get list of all available branches (local and remote)"""
+        try:
+            result = subprocess.run(
+                ["git", "branch", "-a"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            if result.returncode != 0:
+                return []
+            
+            branches = []
+            for line in result.stdout.strip().split('\n'):
+                if line.strip():
+                    # Clean up branch names (remove *, whitespace, remotes/origin/)
+                    branch = line.strip().replace('*', '').strip()
+                    if branch.startswith('remotes/origin/'):
+                        branch = branch.replace('remotes/origin/', '')
+                    if branch and branch != 'HEAD' and '->' not in branch:
+                        branches.append(branch)
+            
+            # Remove duplicates and return
+            return list(set(branches))
+            
+        except Exception:
+            return []
+    
+    def _find_similar_branches(self, target: str, available: list) -> list:
+        """Find branches similar to target using fuzzy matching"""
+        if not available:
+            return []
+            
+        similar = []
+        target_lower = target.lower()
+        
+        # Exact matches first (case insensitive)
+        for branch in available:
+            if branch.lower() == target_lower:
+                similar.append(branch)
+        
+        # Partial matches
+        for branch in available:
+            branch_lower = branch.lower()
+            if (target_lower in branch_lower or branch_lower in target_lower) and branch not in similar:
+                similar.append(branch)
+        
+        # Fuzzy matches (common patterns)
+        fuzzy_matches = []
+        for branch in available:
+            branch_lower = branch.lower()
+            if branch in similar:
+                continue
+                
+            # Check for common variations
+            if any(pattern in branch_lower for pattern in [target_lower[:4], target_lower[-4:]]) and len(target) > 3:
+                fuzzy_matches.append(branch)
+        
+        similar.extend(fuzzy_matches[:2])  # Add top 2 fuzzy matches
+        
+        return similar[:3]  # Return top 3 overall matches
     
     def _get_confirmation(self) -> bool:
         """
