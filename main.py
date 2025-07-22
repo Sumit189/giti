@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 giti - Natural language to Git commands CLI tool
 """
@@ -11,6 +13,9 @@ from pathlib import Path
 from llm_runner import LLMRunner
 from parser import PromptParser
 from executor import CommandExecutor
+
+# Store the original working directory where giti was invoked
+ORIGINAL_CWD = os.getcwd()
 
 # Global model cache for speed
 _model_cache = {}
@@ -100,7 +105,6 @@ def main():
     try:
         llm_runner = get_llm_runner(args.model_path)
         prompt_parser = get_prompt_parser()
-        executor = CommandExecutor(dry_run=args.dry_run, no_confirm=args.no_confirm)
     except Exception as e:
         print(f"Error initializing components: {e}")
         sys.exit(1)
@@ -115,16 +119,16 @@ def main():
     
     if args.shell:
         # Interactive shell mode
-        run_interactive_shell(llm_runner, prompt_parser, executor, context_data)
+        run_interactive_shell(args, llm_runner, prompt_parser, context_data)
     elif args.query:
         # Single command mode
-        process_query(args.query, llm_runner, prompt_parser, executor, context_data)
+        process_query(args.query, args, llm_runner, prompt_parser, context_data)
     else:
         parser.print_help()
         sys.exit(1)
 
 
-def process_query(query, llm_runner, prompt_parser, executor, context_data=None):
+def process_query(query: str, args, llm_runner: LLMRunner, prompt_parser: PromptParser, context_data=None):
     """Process a single natural language query"""
     try:
         # Generate prompt with context
@@ -141,45 +145,42 @@ def process_query(query, llm_runner, prompt_parser, executor, context_data=None)
             print("Could not generate valid commands for the query.")
             return
         
-        # Execute commands (executor will display them)
+        # Execute commands in the original working directory
+        executor = CommandExecutor(
+            dry_run=args.dry_run, 
+            no_confirm=args.no_confirm,
+            working_directory=ORIGINAL_CWD
+        )
         executor.execute_commands(commands)
         
     except Exception as e:
         print(f"Error processing query: {e}")
 
 
-def run_interactive_shell(llm_runner, prompt_parser, executor, context_data=None):
-    """Run in interactive shell mode"""
-    print("Giti Interactive Shell (model cached for speed)")
-    print("Type 'exit' or 'quit' to leave, 'help' for assistance")
-    print()
+def run_interactive_shell(args, llm_runner: LLMRunner, prompt_parser: PromptParser, context_data=None):
+    """Run interactive shell mode"""
+    print("🔄 Entering interactive Git command mode. Type 'exit' or 'quit' to leave.")
+    print("💡 Tip: Describe what you want to do in natural language\n")
     
     while True:
         try:
             query = input("giti> ").strip()
             
-            if query.lower() in ['exit', 'quit']:
-                print("Goodbye!")
+            if query.lower() in ['exit', 'quit', 'q']:
+                print("👋 Goodbye!")
                 break
-            elif query.lower() == 'help':
-                print("Enter natural language descriptions of Git operations.")
-                print("Examples:")
-                print("  'commit all changes with message fix bugs'")
-                print("  'create branch feature-auth'")
-                print("  'go back to commit from 2 hours ago'")
-                print()
-                continue
-            elif not query:
+                
+            if not query:
                 continue
                 
-            process_query(query, llm_runner, prompt_parser, executor, context_data)
+            process_query(query, args, llm_runner, prompt_parser, context_data)
             print()
             
         except KeyboardInterrupt:
-            print("\nGoodbye!")
+            print("\n👋 Goodbye!")
             break
         except EOFError:
-            print("\nGoodbye!")
+            print("\n👋 Goodbye!")
             break
 
 

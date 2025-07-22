@@ -4,12 +4,13 @@ Executor - Command execution with confirmation and dry-run support
 
 import subprocess
 from typing import List
+import os
 
 
 class CommandExecutor:
     """Handles execution of Git commands with safety features"""
     
-    def __init__(self, dry_run: bool = False, no_confirm: bool = False):
+    def __init__(self, dry_run: bool = False, no_confirm: bool = False, working_directory=None):
         """
         Initialize the command executor
         
@@ -19,6 +20,7 @@ class CommandExecutor:
         """
         self.dry_run = dry_run
         self.no_confirm = no_confirm
+        self.working_directory = working_directory or os.getcwd()  # Use provided directory or current
     
     def execute_commands(self, commands: List[str]) -> None:
         """
@@ -57,7 +59,7 @@ class CommandExecutor:
                     cmd.split(),
                     capture_output=True,
                     text=True,
-                    cwd=".",
+                    cwd=self.working_directory,
                     timeout=30  # 30 second timeout
                 )
                 
@@ -173,7 +175,7 @@ class CommandExecutor:
                     retry_cmd.split(),
                     capture_output=True,
                     text=True,
-                    cwd=".",
+                    cwd=self.working_directory,
                     timeout=30
                 )
                 
@@ -203,6 +205,7 @@ class CommandExecutor:
                 ["git", "branch", "-a"],
                 capture_output=True,
                 text=True,
+                cwd=self.working_directory,
                 timeout=10
             )
             
