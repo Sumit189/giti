@@ -15,7 +15,7 @@ from parser import PromptParser
 from executor import CommandExecutor
 
 # Store the original working directory where giti was invoked
-ORIGINAL_CWD = os.getcwd()
+ORIGINAL_CWD = os.environ.get('GITI_ORIGINAL_CWD', os.getcwd())
 
 # Global model cache for speed
 _model_cache = {}

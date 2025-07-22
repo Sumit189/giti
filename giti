@@ -1,4 +1,6 @@
 #!/bin/bash
 # giti wrapper script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Capture the user's current working directory
+export GITI_ORIGINAL_CWD="$(pwd)"
 python3 "$SCRIPT_DIR/main.py" "$@" 
