@@ -3,6 +3,7 @@ Executor - Command execution with confirmation and dry-run support
 """
 
 import subprocess
+import shlex
 from typing import List
 import os
 
@@ -56,7 +57,7 @@ class CommandExecutor:
             
             try:
                 result = subprocess.run(
-                    cmd.split(),
+                    shlex.split(cmd),
                     capture_output=True,
                     text=True,
                     cwd=self.working_directory,
@@ -130,7 +131,7 @@ class CommandExecutor:
             return False
             
         # Extract branch name from checkout/switch commands
-        parts = original_cmd.split()
+        parts = shlex.split(original_cmd)
         if len(parts) < 2:
             return False
             
@@ -172,7 +173,7 @@ class CommandExecutor:
             
             try:
                 retry_result = subprocess.run(
-                    retry_cmd.split(),
+                    shlex.split(retry_cmd),
                     capture_output=True,
                     text=True,
                     cwd=self.working_directory,
