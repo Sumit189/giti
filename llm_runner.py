@@ -3,6 +3,8 @@ LLM Runner - Interface for llama.cpp model inference
 """
 
 import os
+import sys
+import contextlib
 from typing import Optional
 
 try:
@@ -10,6 +12,18 @@ try:
 except ImportError:
     print("Error: llama-cpp-python not installed. Run: pip install llama-cpp-python")
     exit(1)
+
+
+@contextlib.contextmanager
+def suppress_stderr():
+    """Context manager to suppress stderr output"""
+    with open(os.devnull, "w") as devnull:
+        old_stderr = sys.stderr
+        sys.stderr = devnull
+        try:
+            yield
+        finally:
+            sys.stderr = old_stderr
 
 
 class LLMRunner:
@@ -31,20 +45,24 @@ class LLMRunner:
         self.max_tokens = max_tokens
         self.temperature = temperature
         
-        print(f"Loading Qwen2.5-Coder model from {model_path}...")
-        self.llm = Llama(
-            model_path=model_path,
-            n_ctx=1024,  # Smaller context for speed
-            n_threads=None,  # Use all available CPU threads
-            verbose=False,  # Suppress llama.cpp logs
-            seed=42,  # For reproducible results
-            chat_format="chatml",  # Use ChatML format for Qwen models
-            n_batch=256,  # Smaller batch for speed
-            use_mmap=True,  # Memory mapping for faster loading
-            use_mlock=False,  # Don't lock memory for faster startup
-            n_gpu_layers=0,  # CPU only for consistency
-        )
-        print("Model loaded!")
+        print("🚀 Loading AI model...")
+        
+        # Suppress all the verbose GGML/Metal logging during model load
+        with suppress_stderr():
+            self.llm = Llama(
+                model_path=model_path,
+                n_ctx=1024,  # Smaller context for speed
+                n_threads=None,  # Use all available CPU threads
+                verbose=False,  # Suppress llama.cpp logs
+                seed=42,  # For reproducible results
+                chat_format="chatml",  # Use ChatML format for Qwen models
+                n_batch=256,  # Smaller batch for speed
+                use_mmap=True,  # Memory mapping for faster loading
+                use_mlock=False,  # Don't lock memory for faster startup
+                n_gpu_layers=0,  # CPU only for consistency
+            )
+        
+        print("✅ Model ready!")
     
     def generate(self, prompt: str) -> str:
         """

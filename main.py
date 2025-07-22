@@ -96,9 +96,9 @@ def main():
     
     # Validate model file exists
     if not os.path.exists(args.model_path):
-        print(f"Error: Model file not found at {args.model_path}")
-        print("Please download the Qwen2.5-Coder-1.5B model:")
-        print("wget https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf")
+        print(f"❌ Model file not found at {args.model_path}")
+        print("📥 Please download the Qwen2.5-Coder-1.5B model:")
+        print("   wget https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf")
         sys.exit(1)
     
     # Initialize components (with caching for speed)
@@ -106,14 +106,16 @@ def main():
         llm_runner = get_llm_runner(args.model_path)
         prompt_parser = get_prompt_parser()
     except Exception as e:
-        print(f"Error initializing components: {e}")
+        print(f"❌ Error initializing components: {e}")
+        print("💡 Make sure the model file is valid and you have enough memory.")
         sys.exit(1)
     
     # Load context if provided
     context_data = None
     if args.context:
         if not os.path.exists(args.context):
-            print(f"Error: Context file not found at {args.context}")
+            print(f"❌ Context file not found at {args.context}")
+            print("💡 Make sure the file path is correct.")
             sys.exit(1)
         context_data = prompt_parser.load_context_file(args.context)
     
@@ -135,14 +137,15 @@ def process_query(query: str, args, llm_runner: LLMRunner, prompt_parser: Prompt
         prompt = prompt_parser.generate_prompt(query, context_data)
         
         # Get response from LLM
-        print("Thinking...")
+        print("🤔 Thinking...")
         raw_response = llm_runner.generate(prompt)
         
         # Parse commands
         commands = prompt_parser.parse_commands(raw_response)
         
         if not commands:
-            print("Could not generate valid commands for the query.")
+            print("❌ Could not generate valid commands for that query.")
+            print("💡 Try rephrasing or being more specific.")
             return
         
         # Execute commands in the original working directory
@@ -154,20 +157,22 @@ def process_query(query: str, args, llm_runner: LLMRunner, prompt_parser: Prompt
         executor.execute_commands(commands)
         
     except Exception as e:
-        print(f"Error processing query: {e}")
+        print(f"❌ Error processing query: {e}")
+        print("💡 Try a simpler query or check if you're in a git repository.")
 
 
 def run_interactive_shell(args, llm_runner: LLMRunner, prompt_parser: PromptParser, context_data=None):
     """Run interactive shell mode"""
-    print("🔄 Entering interactive Git command mode. Type 'exit' or 'quit' to leave.")
-    print("💡 Tip: Describe what you want to do in natural language\n")
+    print("🌟 Welcome to giti interactive mode!")
+    print("💡 Describe what you want to do in natural language")
+    print("⌨️  Type 'exit', 'quit', or 'q' to leave\n")
     
     while True:
         try:
             query = input("giti> ").strip()
             
             if query.lower() in ['exit', 'quit', 'q']:
-                print("👋 Goodbye!")
+                print("👋 Thanks for using giti!")
                 break
                 
             if not query:
@@ -177,10 +182,10 @@ def run_interactive_shell(args, llm_runner: LLMRunner, prompt_parser: PromptPars
             print()
             
         except KeyboardInterrupt:
-            print("\n👋 Goodbye!")
+            print("\n👋 Thanks for using giti!")
             break
         except EOFError:
-            print("\n👋 Goodbye!")
+            print("\n👋 Thanks for using giti!")
             break
 
 
