@@ -11,7 +11,7 @@ Convert natural language into executable Git commands using **Qwen2.5-Coder** - 
 # Install
 git clone https://github.com/Sumit189/giti && cd giti
 pip3 install llama-cpp-python && chmod +x main.py giti
-echo 'export PATH="$(pwd):$PATH"' >> ~/.zshrc && source ~/.zshrc
+echo "export PATH=\"$(pwd):\$PATH\"" >> ~/.zshrc && source ~/.zshrc
 
 # Download model (1GB)
 mkdir -p models && cd models
@@ -39,15 +39,17 @@ chmod +x main.py giti
 
 For **zsh** (most macOS users):
 ```bash
-echo 'export PATH="$(pwd):$PATH"' >> ~/.zshrc
+echo "export PATH=\"$(pwd):\$PATH\"" >> ~/.zshrc
 source ~/.zshrc
 ```
 
 For **bash**:
 ```bash
-echo 'export PATH="$(pwd):$PATH"' >> ~/.bashrc
+echo "export PATH=\"$(pwd):\$PATH\"" >> ~/.bashrc
 source ~/.bashrc
 ```
+
+> **Why double quotes?** Using `echo "export PATH=\"$(pwd):\$PATH\""` expands `$(pwd)` immediately to the absolute path, while `\$PATH` becomes `$PATH` in the config file. This ensures the path resolves correctly when your shell starts.
 
 > **Alternative**: If you prefer, you can use the absolute path: `echo 'export PATH="/full/path/to/giti:$PATH"'`
 
@@ -178,6 +180,12 @@ giti> exit
 - Verify PATH includes giti: `echo $PATH | grep giti`
 - If not found, re-run the PATH export command for your shell
 
+**PATH not resolving correctly:**
+- Check what was written to your config: `tail -3 ~/.zshrc` (or `~/.bashrc`)
+- If you see `export PATH="$(pwd):$PATH"` (literal), the command used single quotes
+- Fix with double quotes: `echo "export PATH=\"$(pwd):\$PATH\"" >> ~/.zshrc`
+- This expands `$(pwd)` to the actual path immediately
+
 **Model not found error:**
 - Ensure the model file exists: `ls -la models/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf`
 - If missing, re-download: 
@@ -219,4 +227,4 @@ sed -i '/export PATH.*giti/d' ~/.bashrc && source ~/.bashrc
 which giti
 # Then remove that directory (replace with actual path):
 # rm -rf /actual/path/to/giti
-``` 
+```
