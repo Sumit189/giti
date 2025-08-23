@@ -44,6 +44,45 @@ def get_prompt_parser() -> PromptParser:
     return _parser_cache
 
 
+def download_model(model_path: str):
+    """Download the required AI model"""
+    import urllib.request
+    import urllib.error
+    
+    model_url = "https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf"
+    model_dir = Path(model_path).parent
+    
+    print(f"📥 Downloading AI model (1GB)...")
+    print(f"   URL: {model_url}")
+    print(f"   Destination: {model_path}")
+    print()
+    
+    # Create models directory if it doesn't exist
+    model_dir.mkdir(parents=True, exist_ok=True)
+    
+    try:
+        # Download with progress
+        def show_progress(block_num, block_size, total_size):
+            downloaded = block_num * block_size
+            if total_size > 0:
+                percent = (downloaded * 100) // total_size
+                print(f"\r📥 Downloading... {percent}% ({downloaded // 1024 // 1024}MB / {total_size // 1024 // 1024}MB)", end="", flush=True)
+        
+        urllib.request.urlretrieve(model_url, model_path, show_progress)
+        print(f"\n✅ Model downloaded successfully to {model_path}")
+        print("🧪 Test with: giti 'check status' --dry-run")
+        
+    except urllib.error.URLError as e:
+        print(f"\n❌ Failed to download model: {e}")
+        print("💡 Please check your internet connection and try again.")
+        print("   You can also download manually:")
+        print(f"   curl -L -o {model_path} {model_url}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n❌ Error downloading model: {e}")
+        sys.exit(1)
+
+
 def main():
     # Get the directory where this script is located
     script_dir = Path(__file__).parent.absolute()
@@ -92,12 +131,25 @@ def main():
         help="Path to the GGUF model file"
     )
     
+    parser.add_argument(
+        "--download-model",
+        action="store_true",
+        help="Download the required AI model"
+    )
+    
     args = parser.parse_args()
+    
+    # Handle download-model option
+    if args.download_model:
+        download_model(args.model_path)
+        return
     
     # Validate model file exists
     if not os.path.exists(args.model_path):
         print(f"❌ Model file not found at {args.model_path}")
         print("📥 Please download the Qwen2.5-Coder-1.5B model:")
+        print("   giti --download-model")
+        print("   or manually:")
         print("   wget https://huggingface.co/bartowski/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/main/Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf")
         sys.exit(1)
     

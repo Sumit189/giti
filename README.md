@@ -23,6 +23,23 @@ giti "check status" --dry-run
 
 ## Installation
 
+### Option 1: Homebrew (Recommended - macOS/Linux)
+
+The easiest way to install giti with automatic model download:
+
+```bash
+# Add the tap
+brew tap sumit189/giti
+
+# Install giti (includes automatic model download)
+brew install giti
+
+# Test the installation
+giti "check status" --dry-run
+```
+
+### Option 2: Manual Installation
+
 **Clone and setup:**
 ```bash
 git clone https://github.com/Sumit189/giti
